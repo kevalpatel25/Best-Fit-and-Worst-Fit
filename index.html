@@ -5,45 +5,68 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Memory Allocation Simulator</title>
 <style>
-  :root { --navy:#1e3a6e; --green:#17824f; --greenbg:#e8f6ee; --red:#c0283a; --redbg:#fdecee; --line:#d6dff0; --bg:#f4f7fc; }
+  :root { --navy:#1e3a6e; --first:#b36b00; --firstbg:#fff4e0; --green:#17824f; --greenbg:#e8f6ee; --red:#c0283a; --redbg:#fdecee; --line:#d6dff0; --bg:#f4f7fc; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: "Segoe UI", Arial, sans-serif; background:var(--bg); color:#1b2433; }
   header { background:var(--navy); color:#fff; text-align:center; padding:18px 12px; }
   header h1 { margin:0; font-size:26px; }
   header p { margin:4px 0 0; opacity:.85; font-size:14px; }
-  main { max-width:1100px; margin:0 auto; padding:18px; }
+  main { max-width:1200px; margin:0 auto; padding:18px; }
   .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
   label { font-weight:600; font-size:14px; display:block; margin-bottom:4px; }
-  textarea { width:100%; min-height:56px; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; resize:vertical; }
-  .inputs { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  textarea, input[type=number] { width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  textarea { min-height:56px; resize:vertical; }
+  .inputs { display:grid; grid-template-columns:1fr 1fr 150px; gap:14px; }
   .hint { font-size:12px; color:#5a6679; margin-top:3px; }
   .buttons { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
   button { padding:9px 18px; border:0; border-radius:6px; font-weight:600; cursor:pointer; color:#fff; font-size:14px; }
-  .b-best { background:var(--green); } .b-worst { background:var(--red); } .b-cmp { background:var(--navy); } .b-reset { background:#6b7686; }
+  .b-first { background:var(--first); } .b-best { background:var(--green); } .b-worst { background:var(--red); }
+  .b-cmp { background:var(--navy); } .b-paper { background:#5b4bb7; } .b-reset { background:#6b7686; }
   #error { color:var(--red); font-weight:600; margin-top:10px; display:none; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; align-items:start; }
-  .res { border-radius:10px; padding:14px; border:1px solid; }
-  .res.best { background:var(--greenbg); border-color:#a9dcc0; } .res.worst { background:var(--redbg); border-color:#f0b4bc; }
-  .res h2 { margin:0 0 8px; font-size:18px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
-  .res.best h2 { color:var(--green); } .res.worst h2 { color:var(--red); }
-  .badge { font-size:12px; padding:3px 10px; border-radius:20px; background:#fff; }
-  table { width:100%; border-collapse:collapse; background:#fff; font-size:13px; margin:8px 0; }
-  th, td { border:1px solid var(--line); padding:6px 8px; text-align:center; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px; align-items:start; }
+  .res { border-radius:10px; padding:14px; border:1px solid; margin-bottom:16px; }
+  .grid3 .res { margin-bottom:0; }
+  .res.first { background:var(--firstbg); border-color:#f0cf95; } .res.best { background:var(--greenbg); border-color:#a9dcc0; } .res.worst { background:var(--redbg); border-color:#f0b4bc; }
+  .res h2 { margin:0 0 8px; font-size:17px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .res.first h2 { color:var(--first); } .res.best h2 { color:var(--green); } .res.worst h2 { color:var(--red); }
+  .badge { font-size:11px; padding:3px 10px; border-radius:20px; background:#fff; }
+  table { width:100%; border-collapse:collapse; background:#fff; font-size:12.5px; margin:8px 0; }
+  th, td { border:1px solid var(--line); padding:5px 6px; text-align:center; }
   th { background:#eaf0fb; color:var(--navy); }
+  td.l { text-align:left; }
   .ok { color:var(--green); font-weight:700; } .no { color:var(--red); font-weight:700; }
-  .stats { display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:13px; background:#fff; border-radius:8px; padding:10px; }
-  .stats div { display:flex; justify-content:space-between; }
-  .stats b { font-weight:700; }
+  .stats { background:#fff; border-radius:8px; padding:8px 10px; font-size:12.5px; }
+  .stats div { display:flex; justify-content:space-between; gap:8px; padding:1px 0; }
+  .stats b { font-weight:700; text-align:right; }
+  .stats hr { border:0; border-top:1px solid var(--line); margin:4px 0; }
   .meta { font-size:13px; margin-bottom:6px; }
   .conclusion { background:#eef0fd; border:1px solid #cfd4f5; }
   .note { font-size:12px; color:#44506a; margin-top:8px; }
-  @media (max-width:760px) { .inputs, .grid2 { grid-template-columns:1fr; } }
+  h3.sec { margin:0 0 6px; color:var(--navy); font-size:16px; }
+  /* memory layout */
+  .mem { display:flex; width:100%; height:62px; border:1px solid #8a97b3; border-radius:4px; overflow:hidden; background:#fff; }
+  .seg { display:flex; flex-direction:column; border-right:2px solid #1b2433; min-width:0; }
+  .seg:last-child { border-right:0; }
+  .seg .bar { flex:1; display:flex; min-height:0; }
+  .seg .cap { font-size:10.5px; text-align:center; background:#eef2fa; border-top:1px solid #8a97b3; padding:1px 0; white-space:nowrap; overflow:hidden; }
+  .pc { display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:600; overflow:hidden; white-space:nowrap; border-right:1px solid rgba(0,0,0,.25); }
+  .pc.if { background:repeating-linear-gradient(45deg,#fff3d6,#fff3d6 4px,#f3c969 4px,#f3c969 6px); color:#6b4a00; font-weight:500; }
+  .pc.ef { background:repeating-linear-gradient(-45deg,#f1f1f5,#f1f1f5 4px,#c8c9d6 4px,#c8c9d6 6px); color:#444; font-weight:500; }
+  .pc.os { background:#37404f; color:#fff; flex:1; }
+  .lgd { display:flex; flex-wrap:wrap; gap:14px; font-size:12px; margin:8px 0 2px; }
+  .lgd i { display:inline-block; width:14px; height:12px; vertical-align:-2px; margin-right:4px; border:1px solid #666; }
+  .memrow { margin-bottom:14px; }
+  .memrow .t { font-weight:600; font-size:13px; margin-bottom:4px; }
+  details { margin-top:8px; } summary { cursor:pointer; font-weight:600; font-size:13px; color:var(--navy); }
+  .charts { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  svg text { font-family:"Segoe UI", Arial, sans-serif; }
+  @media (max-width:900px) { .inputs, .grid3, .charts { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 <header>
   <h1>Memory Allocation Simulator</h1>
-  <p>Best Fit vs Worst Fit &middot; multiple-partition contiguous allocation</p>
+  <p>First Fit &middot; Best Fit &middot; Worst Fit &middot; mathematical model of Ogba &amp; Bello (2024)</p>
 </header>
 <main>
   <section class="card">
@@ -51,35 +74,41 @@
       <div>
         <label for="blocks">Memory Blocks / Partitions (KB)</label>
         <textarea id="blocks">200, 150, 400, 250, 450</textarea>
-        <div class="hint">Comma, space or newline separated. Operating-system area is not included.</div>
+        <div class="hint">Comma, space or newline separated.</div>
       </div>
       <div>
         <label for="procs">Processes (KB)</label>
         <textarea id="procs">115, 250, 400, 300, 100</textarea>
         <div class="hint">Processes are allocated in the order entered.</div>
       </div>
+      <div>
+        <label for="os">OS area (KB)</label>
+        <input type="number" id="os" value="100" min="0" step="1">
+        <div class="hint">Reserved, not allocatable.</div>
+      </div>
     </div>
     <div class="buttons">
+      <button class="b-first" onclick="show('first')">First Fit</button>
       <button class="b-best" onclick="show('best')">Best Fit</button>
       <button class="b-worst" onclick="show('worst')">Worst Fit</button>
-      <button class="b-cmp" onclick="show('compare')">Compare</button>
+      <button class="b-cmp" onclick="show('compare')">Compare All</button>
+      <button class="b-paper" onclick="loadPaper()">Load Paper Dataset</button>
       <button class="b-reset" onclick="resetAll()">Reset</button>
     </div>
     <div id="error"></div>
   </section>
   <div id="output"></div>
 </main>
- 
+
 <script>
-const DEFAULT_BLOCKS = "200, 150, 400, 250, 450";
-const DEFAULT_PROCS = "115, 250, 400, 300, 100";
- 
+const NAMES = { first: 'First Fit', best: 'Best Fit', worst: 'Worst Fit' };
+const PALETTE = ['#7fb3e6','#8fd1a6','#f2a6a0','#c9b2e8','#f5cf7a','#9ad6d6','#e8b4d3','#b8c97a'];
+
 function parse(text, name) {
   const t = text.trim();
   if (!t) throw new Error(name + " input is empty.");
-  const parts = t.split(/[\s,]+/).filter(Boolean);
   const out = [];
-  for (const p of parts) {
+  for (const p of t.split(/[\s,]+/).filter(Boolean)) {
     if (!/^-?\d+(\.\d+)?$/.test(p)) throw new Error(name + ": '" + p + "' is not a number.");
     const v = Number(p);
     if (v < 0) throw new Error(name + ": negative size " + v + " is not allowed.");
@@ -89,13 +118,18 @@ function parse(text, name) {
   }
   return out;
 }
- 
+
+/* Allocation following the worked method of the paper: scan the holes for every process,
+   allocate, and keep the leftover of a partition as a hole for later processes.
+   IF = leftover inside partitions that hold at least one process.
+   EF = partitions that no process has used. */
 function run(strategy, blocks, procs) {
   const free = blocks.slice();
-  const touched = blocks.map(() => false);
+  const placed = blocks.map(() => []);
   let comparisons = 0;
-  const rows = [];
+  const rows = [], steps = [];
   procs.forEach((p, i) => {
+    const holes = free.map((f, b) => ({ b, f }));
     let pick = -1;
     for (let b = 0; b < free.length; b++) {
       comparisons++;
@@ -105,101 +139,198 @@ function run(strategy, blocks, procs) {
         else if (strategy === 'worst' && free[b] > free[pick]) pick = b;
       }
     }
+    const id = 'P' + (i + 1);
     if (pick === -1) {
-      rows.push({ id: 'P' + (i + 1), size: p, block: null });
+      rows.push({ id, size: p, block: null });
+      steps.push({ id, size: p, holes, pick: -1 });
     } else {
       const before = free[pick];
       free[pick] -= p;
-      touched[pick] = true;
-      rows.push({ id: 'P' + (i + 1), size: p, block: 'B' + (pick + 1) + ' (' + before + ')', remaining: free[pick] });
+      placed[pick].push({ id, size: p, idx: i });
+      rows.push({ id, size: p, block: 'B' + (pick + 1) + ' (' + before + ')', remaining: free[pick] });
+      steps.push({ id, size: p, holes, pick, before, remaining: free[pick] });
     }
   });
   const total = blocks.reduce((a, b) => a + b, 0);
   const allocated = rows.filter(r => r.block).reduce((a, r) => a + r.size, 0);
-  const IF = free.reduce((a, f, b) => a + (touched[b] ? f : 0), 0);
-  const EF = free.reduce((a, f, b) => a + (touched[b] ? 0 : f), 0);
+  const IF = free.reduce((a, f, b) => a + (placed[b].length ? f : 0), 0);
+  const EF = free.reduce((a, f, b) => a + (placed[b].length ? 0 : f), 0);
   const n = rows.filter(r => r.block).length;
   const pct = x => Math.round(x * 10000) / 100;
-  return { rows, total, allocated, freeMem: total - allocated, IF, EF, largest: Math.max(...free),
-           n, N: procs.length, comparisons, util: pct(allocated / total), IFp: pct(IF / total),
-           EFp: pct(EF / total), success: pct(n / procs.length) };
+  return { strategy, rows, steps, free, placed, total, allocated, freeMem: total - allocated, IF, EF,
+    largest: Math.max(...free), n, N: procs.length, comparisons,
+    util: pct(allocated / total), IFp: pct(IF / total), EFp: pct(EF / total),
+    TU: pct((total - IF) / total), success: pct(n / procs.length) };
 }
- 
-function panel(strategy, r, blocks, procs, withInput) {
-  const title = strategy === 'best' ? 'Best Fit Allocation' : 'Worst Fit Allocation';
+
+function stats(r) {
   const failed = r.N - r.n;
-  const badge = failed === 0 ? 'All processes allocated' : failed + (failed === 1 ? ' process' : ' processes') + ' not allocated';
-  let h = '<div class="res ' + strategy + '"><h2><span>' + (failed === 0 ? '&#10003; ' : '&#10007; ') + title + '</span><span class="badge">' + badge + '</span></h2>';
-  if (withInput) h += '<div class="meta"><b>Memory Blocks:</b> ' + blocks.join(', ') + ' KB<br><b>Processes:</b> ' + procs.join(', ') + ' KB</div>';
-  h += '<table><tr><th>Process ID</th><th>Process Size (KB)</th><th>Allocated Block (KB)</th><th>Remaining (KB)</th><th>Status</th></tr>';
-  r.rows.forEach(x => {
-    h += '<tr><td>' + x.id + '</td><td>' + x.size + '</td><td>' + (x.block || 'None') + '</td><td>' +
-         (x.block ? x.remaining : '-') + '</td><td class="' + (x.block ? 'ok' : 'no') + '">' + (x.block ? 'Allocated' : 'Not Allocated') + '</td></tr>';
-  });
-  h += '</table><div class="stats">' +
-    '<div>Total Processes<b>' + r.N + '</b></div><div>Total Memory<b>' + r.total + ' KB</b></div>' +
-    '<div>Allocated Processes<b>' + r.n + '</b></div><div>Allocated Memory<b>' + r.allocated + ' KB</b></div>' +
-    '<div>Unallocated Processes<b>' + failed + '</b></div><div>Remaining Free Memory<b>' + r.freeMem + ' KB</b></div>' +
+  return '<div class="stats">' +
+    '<div>Total Processes<b>' + r.N + '</b></div><div>Allocated / Unallocated<b>' + r.n + ' / ' + failed + '</b></div>' +
+    '<div>Total Memory<b>' + r.total + ' KB</b></div><div>Allocated Memory<b>' + r.allocated + ' KB</b></div>' +
+    '<div>Remaining Free Memory<b>' + r.freeMem + ' KB</b></div><div>Largest Free Block<b>' + r.largest + ' KB</b></div><hr>' +
     '<div>Internal Fragmentation (IF)<b>' + r.IF + ' KB (' + r.IFp + '%)</b></div>' +
     '<div>External Fragmentation (EF)<b>' + r.EF + ' KB (' + r.EFp + '%)</b></div>' +
-    '<div>Memory Utilization<b>' + r.util + '%</b></div><div>Largest Free Block<b>' + r.largest + ' KB</b></div>' +
-    '<div>Allocation Success Rate<b>' + r.success + '%</b></div><div>Block Comparisons<b>' + r.comparisons + '</b></div>' +
-    '</div></div>';
-  return h;
+    '<div>Memory Utilization<b>' + r.util + '%</b></div>' +
+    '<div>Total Utilization TU% (paper)<b>' + r.TU + '%</b></div>' +
+    '<div>Allocation Success Rate<b>' + r.success + '%</b></div><div>Block Comparisons<b>' + r.comparisons + '</b></div></div>';
 }
- 
-function comparisonTable(b, w) {
-  const rows = [
-    ['Total Processes', b.N, w.N], ['Allocated Processes', b.n, w.n], ['Unallocated Processes', b.N - b.n, w.N - w.n],
-    ['Allocated Memory', b.allocated + ' KB', w.allocated + ' KB'], ['Remaining Free Memory', b.freeMem + ' KB', w.freeMem + ' KB'],
-    ['Internal Fragmentation (IF %)', b.IFp + '%', w.IFp + '%'], ['External Fragmentation (EF %)', b.EFp + '%', w.EFp + '%'],
-    ['Largest Free Block', b.largest + ' KB', w.largest + ' KB'], ['Memory Utilization', b.util + '%', w.util + '%'],
-    ['Success Rate', b.success + '%', w.success + '%'], ['Block Comparisons', b.comparisons, w.comparisons]
-  ];
-  let h = '<table><tr><th>Parameter</th><th>Best Fit</th><th>Worst Fit</th></tr>';
-  rows.forEach(r => h += '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>');
+
+function resultTable(r) {
+  let h = '<table><tr><th>Process</th><th>Size (KB)</th><th>Allocated Block (KB)</th><th>Remaining (KB)</th><th>Status</th></tr>';
+  r.rows.forEach(x => {
+    h += '<tr><td>' + x.id + '</td><td>' + x.size + '</td><td>' + (x.block || 'None') + '</td><td>' + (x.block ? x.remaining : '-') +
+         '</td><td class="' + (x.block ? 'ok' : 'no') + '">' + (x.block ? 'Allocated' : 'Not Allocated') + '</td></tr>';
+  });
   return h + '</table>';
 }
- 
-function conclusion(b, w) {
-  let msg;
-  if (b.n > w.n) msg = 'For these inputs, Best Fit performs better: it allocates ' + b.n + ' of ' + b.N + ' processes against ' + w.n + ' for Worst Fit.';
-  else if (w.n > b.n) msg = 'For these inputs, Worst Fit performs better: it allocates ' + w.n + ' of ' + w.N + ' processes against ' + b.n + ' for Best Fit.';
-  else if (b.IF < w.IF) msg = 'Both algorithms allocate the same number of processes, but Best Fit leaves less internal fragmentation (' + b.IFp + '% vs ' + w.IFp + '%).';
-  else if (w.IF < b.IF) msg = 'Both algorithms allocate the same number of processes, but Worst Fit leaves less internal fragmentation (' + w.IFp + '% vs ' + b.IFp + '%).';
-  else msg = 'Both algorithms give the same result for these inputs.';
-  return '<div class="card conclusion"><b>Conclusion</b><p>' + msg + '</p>' +
-    '<div class="note">IF = unused space left inside partitions that received a process. EF = partitions that received no process. ' +
-    'Remainders left in a partition stay available to later processes.</div></div>';
+
+function trace(r) {
+  let h = '<table><tr><th>Process</th><th>Holes searched (free KB)</th><th>Chosen</th><th>Left in hole (IF)</th></tr>';
+  r.steps.forEach(s => {
+    const holes = s.holes.map(x => 'B' + (x.b + 1) + ':' + x.f).join(', ');
+    if (s.pick === -1) h += '<tr><td>' + s.id + ' (' + s.size + ')</td><td class="l">' + holes + '</td><td class="no" colspan="2">No hole &ge; ' + s.size + ' &rarr; not allocated</td></tr>';
+    else h += '<tr><td>' + s.id + ' (' + s.size + ')</td><td class="l">' + holes + '</td><td>B' + (s.pick + 1) + ' (' + s.before + ')</td><td>' + s.before + ' &minus; ' + s.size + ' = ' + s.remaining + '</td></tr>';
+  });
+  return h + '</table>';
 }
- 
+
+function layout(r, blocks, os) {
+  const all = os + r.total;
+  let h = '<div class="mem">';
+  if (os > 0) h += '<div class="seg" style="flex:0 0 ' + (os / all * 100) + '%"><div class="bar"><div class="pc os">OS</div></div><div class="cap">' + os + 'K</div></div>';
+  blocks.forEach((size, b) => {
+    h += '<div class="seg" style="flex:0 0 ' + (size / all * 100) + '%"><div class="bar">';
+    if (!r.placed[b].length) h += '<div class="pc ef" style="flex:' + size + '">EF ' + size + '</div>';
+    else {
+      r.placed[b].forEach(p => h += '<div class="pc" style="flex:' + p.size + ';background:' + PALETTE[p.idx % PALETTE.length] + '">' + p.id + '</div>');
+      if (r.free[b] > 0) h += '<div class="pc if" style="flex:' + r.free[b] + '">' + (r.free[b] / size > 0.12 ? 'IF ' + r.free[b] : '') + '</div>';
+    }
+    h += '</div><div class="cap">B' + (b + 1) + ' &middot; ' + size + 'K</div></div>';
+  });
+  return h + '</div>';
+}
+const legend = '<div class="lgd"><span><i style="background:#7fb3e6"></i>Process (P#)</span><span><i style="background:repeating-linear-gradient(45deg,#fff3d6,#fff3d6 3px,#f3c969 3px,#f3c969 5px)"></i>Internal fragmentation (IF)</span><span><i style="background:repeating-linear-gradient(-45deg,#f1f1f5,#f1f1f5 3px,#c8c9d6 3px,#c8c9d6 5px)"></i>External fragmentation (EF): unused partition</span><span><i style="background:#37404f"></i>Operating system</span></div>';
+
+function panel(strategy, r, blocks, procs, os, detail) {
+  const failed = r.N - r.n;
+  const badge = failed === 0 ? 'All processes allocated' : failed + (failed === 1 ? ' process' : ' processes') + ' not allocated';
+  let h = '<div class="res ' + strategy + '"><h2><span>' + (failed === 0 ? '&#10003; ' : '&#10007; ') + NAMES[strategy] + ' Allocation</span><span class="badge">' + badge + '</span></h2>';
+  if (detail) h += '<div class="meta"><b>Memory Blocks:</b> ' + blocks.join(', ') + ' KB &nbsp; <b>Processes:</b> ' + procs.join(', ') + ' KB &nbsp; <b>OS:</b> ' + os + ' KB</div>';
+  h += resultTable(r) + stats(r);
+  if (detail) {
+    h += '<h3 class="sec" style="margin-top:12px">Memory map</h3>' + layout(r, blocks, os) + legend;
+    h += '<details open><summary>Step-by-step trace (paper method)</summary>' + trace(r) + '</details>';
+  } else {
+    h += '<details><summary>Step-by-step trace</summary>' + trace(r) + '</details>';
+  }
+  return h + '</div>';
+}
+
+function cmpTable(rs) {
+  const rows = [
+    ['Allocated Processes', r => r.n + ' of ' + r.N], ['Unallocated Processes', r => r.N - r.n],
+    ['Allocated Memory', r => r.allocated + ' KB'], ['Remaining Free Memory', r => r.freeMem + ' KB'],
+    ['Internal Fragmentation IF', r => r.IF + ' KB'], ['IF %', r => r.IFp + '%'],
+    ['External Fragmentation EF', r => r.EF + ' KB'], ['EF %', r => r.EFp + '%'],
+    ['Largest Free Block', r => r.largest + ' KB'], ['Memory Utilization (allocated)', r => r.util + '%'],
+    ['TU % (paper: 100 - IF%)', r => r.TU + '%'], ['Success Rate', r => r.success + '%'], ['Block Comparisons', r => r.comparisons]
+  ];
+  let h = '<table><tr><th>Parameter</th><th>First Fit</th><th>Best Fit</th><th>Worst Fit</th></tr>';
+  rows.forEach(x => h += '<tr><td class="l">' + x[0] + '</td><td>' + x[1](rs.first) + '</td><td>' + x[1](rs.best) + '</td><td>' + x[1](rs.worst) + '</td></tr>');
+  return h + '</table>';
+}
+
+/* Figures 5 and 6 of the paper: TU, IF and EF for each algorithm */
+const SER = [['TU (%)', 'TU', '#1e3a6e'], ['IF (%)', 'IFp', '#d9822b'], ['EF (%)', 'EFp', '#7a8aa6']];
+function barChart(rs) {
+  const algs = ['first', 'best', 'worst'];
+  const W = 520, H = 280, L = 44, T = 16, B = 44, pw = W - L - 10, ph = H - T - B;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Bar chart of TU, IF and EF for each algorithm">';
+  for (let g = 0; g <= 100; g += 20) {
+    const y = T + ph - g / 100 * ph;
+    s += '<line x1="' + L + '" x2="' + (W - 10) + '" y1="' + y + '" y2="' + y + '" stroke="#e1e7f2"/><text x="' + (L - 6) + '" y="' + (y + 4) + '" font-size="11" text-anchor="end" fill="#44506a">' + g + '</text>';
+  }
+  const gw = pw / 3;
+  algs.forEach((a, i) => {
+    const bw = gw / 5;
+    SER.forEach((se, j) => {
+      const v = rs[a][se[1]], x = L + i * gw + gw / 2 - 1.5 * bw + j * bw, hh = v / 100 * ph;
+      s += '<rect x="' + x + '" y="' + (T + ph - hh) + '" width="' + (bw - 3) + '" height="' + hh + '" fill="' + se[2] + '"/>';
+      s += '<text x="' + (x + (bw - 3) / 2) + '" y="' + (T + ph - hh - 3) + '" font-size="9.5" text-anchor="middle" fill="#1b2433">' + v + '</text>';
+    });
+    s += '<text x="' + (L + i * gw + gw / 2) + '" y="' + (H - 24) + '" font-size="12" text-anchor="middle" fill="#1b2433">' + NAMES[a] + '</text>';
+  });
+  SER.forEach((se, j) => {
+    s += '<rect x="' + (L + 40 + j * 110) + '" y="' + (H - 14) + '" width="10" height="10" fill="' + se[2] + '"/><text x="' + (L + 54 + j * 110) + '" y="' + (H - 5) + '" font-size="11" fill="#1b2433">' + se[0] + '</text>';
+  });
+  return s + '</svg>';
+}
+function lineChart(rs) {
+  const algs = ['first', 'best', 'worst'];
+  const W = 520, H = 280, L = 44, T = 16, B = 44, pw = W - L - 30, ph = H - T - B;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Line graph of TU, IF and EF for each algorithm">';
+  for (let g = 0; g <= 100; g += 20) {
+    const y = T + ph - g / 100 * ph;
+    s += '<line x1="' + L + '" x2="' + (W - 10) + '" y1="' + y + '" y2="' + y + '" stroke="#e1e7f2"/><text x="' + (L - 6) + '" y="' + (y + 4) + '" font-size="11" text-anchor="end" fill="#44506a">' + g + '</text>';
+  }
+  const xs = [L + 40, L + 40 + pw / 2 - 20, L + pw - 10];
+  algs.forEach((a, i) => s += '<text x="' + xs[i] + '" y="' + (H - 24) + '" font-size="12" text-anchor="middle" fill="#1b2433">' + NAMES[a] + '</text>');
+  SER.forEach((se, j) => {
+    const pts = algs.map((a, i) => xs[i] + ',' + (T + ph - rs[a][se[1]] / 100 * ph));
+    s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + se[2] + '" stroke-width="2.2"/>';
+    algs.forEach((a, i) => s += '<circle cx="' + xs[i] + '" cy="' + (T + ph - rs[a][se[1]] / 100 * ph) + '" r="3.5" fill="' + se[2] + '"/><text x="' + xs[i] + '" y="' + (T + ph - rs[a][se[1]] / 100 * ph - 7) + '" font-size="9.5" text-anchor="middle" fill="#1b2433">' + rs[a][se[1]] + '</text>');
+    s += '<rect x="' + (L + 40 + j * 110) + '" y="' + (H - 14) + '" width="10" height="10" fill="' + se[2] + '"/><text x="' + (L + 54 + j * 110) + '" y="' + (H - 5) + '" font-size="11" fill="#1b2433">' + se[0] + '</text>';
+  });
+  return s + '</svg>';
+}
+
+function conclusion(rs) {
+  const order = Object.keys(rs).sort((a, b) => rs[b].n - rs[a].n || rs[a].IF - rs[b].IF || rs[a].EF - rs[b].EF);
+  const top = rs[order[0]], tied = order.filter(k => rs[k].n === top.n && rs[k].IF === top.IF && rs[k].EF === top.EF);
+  let msg;
+  if (tied.length === 3) msg = 'All three algorithms give the same result for these inputs.';
+  else {
+    msg = 'For these inputs, ' + NAMES[order[0]] + ' performs best: it allocates ' + top.n + ' of ' + top.N + ' processes with IF ' + top.IFp + '% and EF ' + top.EFp + '%.';
+    const rest = order.slice(1).filter(k => !tied.includes(k)).map(k => NAMES[k] + ' allocates ' + rs[k].n + ' (IF ' + rs[k].IFp + '%, EF ' + rs[k].EFp + '%)');
+    if (rest.length) msg += ' ' + rest.join('; ') + '.';
+  }
+  return '<div class="card conclusion"><b>Conclusion</b><p id="conclusion-text">' + msg + '</p>' +
+    '<div class="note">IF = unused space left inside partitions that received a process. EF = partitions that received no process. TU% follows the paper: (total memory &minus; IF) &divide; total memory &times; 100, so it counts unused partitions as utilized. Memory Utilization is allocated memory &divide; total memory. The leftover of a partition stays available to later processes.</div></div>';
+}
+
 function show(mode) {
-  const err = document.getElementById('error');
-  const out = document.getElementById('output');
+  const err = document.getElementById('error'), out = document.getElementById('output');
   err.style.display = 'none';
-  let blocks, procs;
+  let blocks, procs, os;
   try {
     blocks = parse(document.getElementById('blocks').value, 'Memory blocks');
     procs = parse(document.getElementById('procs').value, 'Processes');
-  } catch (e) {
-    err.textContent = e.message; err.style.display = 'block'; out.innerHTML = ''; return;
-  }
-  const b = run('best', blocks, procs), w = run('worst', blocks, procs);
-  if (mode === 'best') out.innerHTML = panel('best', b, blocks, procs, true);
-  else if (mode === 'worst') out.innerHTML = panel('worst', w, blocks, procs, true);
-  else {
-    out.innerHTML = '<div class="card"><b>Input</b><div class="meta">Memory Blocks (KB): ' + blocks.join(', ') +
-      ' &nbsp;|&nbsp; Processes (KB): ' + procs.join(', ') + ' &nbsp;|&nbsp; Total Blocks: ' + blocks.length + ' &nbsp;|&nbsp; Total Processes: ' + procs.length + '</div></div>' +
-      '<div class="grid2">' + panel('best', b, blocks, procs, false) + panel('worst', w, blocks, procs, false) + '</div>' +
-      '<div class="card"><b>Performance Comparison</b>' + comparisonTable(b, w) + '</div>' + conclusion(b, w);
-  }
+    os = Number(document.getElementById('os').value || 0);
+    if (!Number.isInteger(os) || os < 0) throw new Error('OS area must be a whole number of KB (0 or more).');
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; out.innerHTML = ''; return; }
+  const rs = { first: run('first', blocks, procs), best: run('best', blocks, procs), worst: run('worst', blocks, procs) };
+  if (mode !== 'compare') { out.innerHTML = panel(mode, rs[mode], blocks, procs, os, true); return; }
+  out.innerHTML =
+    '<div class="card" id="cmp-input"><b>Input</b><div class="meta">Memory Blocks (KB): ' + blocks.join(', ') + ' &nbsp;|&nbsp; Processes (KB): ' + procs.join(', ') +
+    ' &nbsp;|&nbsp; Partitions: ' + blocks.length + ' &nbsp;|&nbsp; Processes: ' + procs.length + ' &nbsp;|&nbsp; Total memory: ' + (os + rs.first.total) + ' KB (OS ' + os + ' KB + ' + rs.first.total + ' KB)</div></div>' +
+    '<div class="grid3" id="cmp-results">' + ['first', 'best', 'worst'].map(k => panel(k, rs[k], blocks, procs, os, false)).join('') + '</div>' +
+    '<div class="card" id="cmp-layout"><h3 class="sec">Memory maps (Figures 2&ndash;4 of the paper)</h3>' +
+      ['first', 'best', 'worst'].map(k => '<div class="memrow"><div class="t">' + NAMES[k] + '</div>' + layout(rs[k], blocks, os) + '</div>').join('') + legend + '</div>' +
+    '<div class="card" id="cmp-table"><h3 class="sec">Performance Comparison (Table 6 of the paper)</h3>' + cmpTable(rs) + '</div>' +
+    '<div class="card" id="cmp-charts"><div class="charts"><div><h3 class="sec">Bar chart of efficiency</h3>' + barChart(rs) + '</div><div><h3 class="sec">Line graph of efficiency</h3>' + lineChart(rs) + '</div></div></div>' +
+    conclusion(rs);
 }
- 
+
+function loadPaper() {
+  document.getElementById('blocks').value = '200, 150, 400, 250, 450';
+  document.getElementById('procs').value = '115, 250, 400, 300, 100';
+  document.getElementById('os').value = 100;
+  show('compare');
+}
 function resetAll() {
-  document.getElementById('blocks').value = '';
-  document.getElementById('procs').value = '';
-  document.getElementById('output').innerHTML = '';
-  document.getElementById('error').style.display = 'none';
+  document.getElementById('blocks').value = ''; document.getElementById('procs').value = '';
+  document.getElementById('output').innerHTML = ''; document.getElementById('error').style.display = 'none';
 }
 </script>
 </body>
